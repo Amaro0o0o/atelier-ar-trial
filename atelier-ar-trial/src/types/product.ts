@@ -1,0 +1,5 @@
+export interface Dimensions { width:number; height:number; depth:number }
+export interface Product { id:string; name:string; category:string; type:string; description:string; price:number; currency:'INR'; images:string[]; materials:string[]; colours:{name:string;hex:string;images?:string[]}[]; dimensions:Dimensions; minDimensions:Dimensions|null; maxDimensions:Dimensions|null; customizable:boolean; customizableParameters:(keyof Dimensions)[]; modelUrl:string|null; arCompatible:boolean; availability:'In stock'|'Made to order'|'Out of stock'; stock:number; manufacturer:{name:string;country:string}; collection:string; createdAt:string; finish:string }
+export interface CartLine { productId:string; colour:string; quantity:number; configuration?:FurnitureConfiguration }
+export interface FurnitureConfiguration {id:string;recipeVersion:'nook-concept-v2'|'nook-concept-v3'|'solace-concept-v1'|'solace-concept-v2'|'solace-concept-v3';productId:'nook-nightstand'|'solace-lounge-chair';dimensions:Dimensions;finish:string;material:string;panelThickness:18;lockedAt:string;status:'draft-needs-manufacturer-review';pricing:'quote-required'}
+

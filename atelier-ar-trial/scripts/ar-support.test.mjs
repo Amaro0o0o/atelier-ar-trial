@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import {detectARSupport} from '../src/services/arSupport.ts';
+const available={secure:true,embedded:false,policyAllowed:true,hasXR:true,hasHitTest:true,supportsSession:async()=>true};
+test('supported devices wait for the asynchronous session check',async()=>{let resolve;const pending=new Promise(r=>resolve=r);let finished=false;const result=detectARSupport({...available,supportsSession:()=>pending}).then(value=>{finished=true;return value});await Promise.resolve();assert.equal(finished,false);resolve(true);assert.equal(await result,'available')});
+test('unsupported tablet is distinguished from missing browser APIs',async()=>{assert.equal(await detectARSupport({...available,supportsSession:async()=>false}),'unsupported');assert.equal(await detectARSupport({...available,hasXR:false}),'missing-api');assert.equal(await detectARSupport({...available,hasHitTest:false}),'missing-api')});
+test('HTTP, embedded previews and hosting restrictions do not launch AR',async()=>{const shouldNotProbe=()=>{throw Error('must not request session')};assert.equal(await detectARSupport({...available,secure:false,supportsSession:shouldNotProbe}),'insecure');assert.equal(await detectARSupport({...available,embedded:true,supportsSession:shouldNotProbe}),'embedded');assert.equal(await detectARSupport({...available,policyAllowed:false,supportsSession:shouldNotProbe}),'blocked')});
+test('permission or browser errors become a visible retryable result',async()=>{assert.equal(await detectARSupport({...available,supportsSession:async()=>{throw new Error('denied')}}),'error')});

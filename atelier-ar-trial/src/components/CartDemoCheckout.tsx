@@ -1,0 +1,30 @@
+import {useEffect,useRef,useState} from 'react';
+import {Check,Download} from 'lucide-react';
+import type {Product,FurnitureConfiguration,Dimensions} from '../types/product';
+import {createDemoOrderReview,readDemoOrders,saveDemoOrders,downloadDemoOrderPacket,type DemoOrder,type DemoOrderReview} from '../services/demoOrders';
+
+interface CheckoutLine {p:Product;colour:string;quantity:number;configuration?:FurnitureConfiguration}
+interface PaymentReview {signature:string;items:{name:string;finish:string;quantity:number;dimensions:Dimensions;blueprint:boolean}[];orders:DemoOrderReview[];total:number}
+const money=(value:number)=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(value);
+export default function CartDemoCheckout({lines}:{lines:CheckoutLine[]}){
+ const signature=JSON.stringify(lines.map(line=>[line.p.id,line.colour,line.quantity,line.p.price,line.configuration||null]));
+ const [review,setReview]=useState<PaymentReview|null>(null),[method,setMethod]=useState<'demo-upi'|'demo-card'>('demo-upi'),[paid,setPaid]=useState(false),[error,setError]=useState('');
+ const [history,setHistory]=useState<DemoOrder[]>(()=>readDemoOrders());
+ const [receipts,setReceipts]=useState<DemoOrder[]>([]);const confirming=useRef(false);
+ useEffect(()=>{if(review&&!paid&&review.signature!==signature){setReview(null);setError('Your bag changed. Review it again before simulating payment.')}},[signature]);
+ function startReview(){try{
+  const orders=lines.flatMap(line=>line.configuration?[createDemoOrderReview(line.p,line.configuration,line.quantity)]:[]);
+  const items=lines.map(line=>({name:line.p.name,finish:line.colour,quantity:line.quantity,dimensions:{...(line.configuration?.dimensions||line.p.dimensions)},blueprint:!!line.configuration}));
+  setReview({signature,items,orders,total:lines.reduce((total,line)=>total+line.p.price*line.quantity,0)});setPaid(false);setReceipts([]);setError('');
+ }catch(reason){setError(reason instanceof Error?reason.message:'The demo checkout could not be prepared.')}}
+ function simulatePayment(){if(!review||confirming.current)return;if(signature!==review.signature){setReview(null);setError('Your bag changed. Review the updated bag first.');return}confirming.current=true;
+  try{const confirmed=saveDemoOrders(review.orders);setReceipts(confirmed);setHistory(readDemoOrders());setPaid(true);setError('')}catch(reason){setError(reason instanceof Error?reason.message:'The demo payment could not be completed.')}finally{confirming.current=false}
+ }
+ return <div className="cart-demo-checkout">
+  {!review&&lines.length>0&&<><button className="button" onClick={startReview}>Demo checkout</button><p className="cart-demo-note">Simulate payment, then download the dimensioned blueprint for each configured furniture piece.</p></>}
+  {review&&!paid&&<section className="cart-payment-review" aria-label="Demo payment review"><span className="ar-demo-label">PAYMENT SIMULATION · NO REAL CHARGE</span><h3>Review your demo order</h3><div className="cart-payment-items">{review.items.map((item,index)=><article key={index}><strong>{item.name} · Qty {item.quantity}</strong><span>{item.dimensions.width} W × {item.dimensions.depth} D × {item.dimensions.height} H mm · {item.finish}</span><small>{item.blueprint?'Dimensioned blueprint available after payment simulation':'Sample product — blueprint not available yet'}</small></article>)}</div><fieldset><legend>Choose a demo payment method</legend><label><input type="radio" name="demo-payment-method" value="demo-upi" checked={method==='demo-upi'} onChange={()=>setMethod('demo-upi')}/> Demo UPI</label><label><input type="radio" name="demo-payment-method" value="demo-card" checked={method==='demo-card'} onChange={()=>setMethod('demo-card')}/> Demo card</label></fieldset><p className="cart-payment-amount"><span>Demo total</span><strong>{money(review.total)}</strong></p><p className="cart-demo-note">No card or bank details are needed. Payment and manufacturer delivery are simulated.</p><button className="button" onClick={simulatePayment}>Simulate payment</button><button className="text-link" onClick={()=>{setReview(null);setError('')}}>Back to bag</button></section>}
+  {review&&paid&&<section className="cart-payment-success" aria-label="Demo payment confirmation"><h3><Check size={22}/> Demo payment successful</h3><p>{money(review.total)} · {method==='demo-upi'?'Demo UPI':'Demo card'}</p><p className="cart-demo-note">No money was charged. Manufacturer delivery was simulated.</p>{receipts.length>0?<><h4>Download your dimensioned blueprint</h4><p className="cart-demo-note">The blueprint is a printable HTML file. Open it in your browser and use Print → Save as PDF if needed.</p>{receipts.map(order=><div className="cart-blueprint-receipt" key={order.id}><strong>{order.productName}</strong><span>{order.configuration.dimensions.width} W × {order.configuration.dimensions.depth} D × {order.configuration.dimensions.height} H mm · {order.configuration.finish} · Qty {order.quantity}</span><small>{order.id}</small><button className="button" onClick={()=>downloadDemoOrderPacket(order)}><Download size={17}/> Download blueprint</button></div>)}</>:<p>No blueprint is available for these sample items. Configure furniture to try the dimensioned blueprint flow.</p>}<button className="text-link" onClick={()=>{setReview(null);setPaid(false)}}>Start another demo checkout</button></section>}
+  {error&&<p role="alert" className="ar-order-error">{error}</p>}
+  {history.length>0&&!paid&&<details className="cart-demo-history"><summary>Saved demo order blueprints ({history.length})</summary>{history.map(order=><div className="cart-blueprint-receipt" key={order.id}><strong>{order.id}</strong><span>{order.configuration.dimensions.width} W × {order.configuration.dimensions.depth} D × {order.configuration.dimensions.height} H mm · {order.configuration.finish} · Qty {order.quantity}</span><button className="text-link" onClick={()=>downloadDemoOrderPacket(order)}><Download size={16}/> Download blueprint</button></div>)}</details>}
+ </div>;
+}
