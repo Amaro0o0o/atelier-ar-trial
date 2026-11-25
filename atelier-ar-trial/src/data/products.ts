@@ -67,17 +67,17 @@ export function cardImageSet(src?: string) {
 }
 export function productImages(product:Product,colour:string){
   const variant=product.colours.find(c=>c.name===colour)?.images;
-  return product.id==='solace-lounge-chair'&&variant?variant:product.modelUrl&&variant?[variant[0],...product.images.slice(1)]:variant || product.images;
+  return (product.id==='solace-lounge-chair'||product.id==='nook-nightstand')&&variant?variant:product.modelUrl&&variant?[variant[0],...product.images.slice(1)]:variant || product.images;
 }
 
 products.push({
  id:'nook-nightstand',name:'Nook Oak Nightstand',category:'Tables',type:'Bedside table',
  description:'A compact bedside companion with softened edges, a single drawer, an open shelf and four tapered legs. An original Atelier concept with an understated brass pull. Explore the actual 3D model below and switch between three finishes.',
- price:12900,currency:'INR',images:['./images/nightstand-natural.png','./images/nightstand-side.png','./images/nightstand-rear.png'],
+ price:12900,currency:'INR',images:['./images/piece-nook-natural.webp', './images/piece-nook-natural-side.webp', './images/piece-nook-natural-rear.webp'],
  materials:['Oak'],colours:[
- {name:'Natural',hex:'#bc9164',images:['./images/nightstand-natural.png']},
- {name:'Walnut',hex:'#705039',images:['./images/nightstand-walnut.png']},
- {name:'Charcoal',hex:'#424744',images:['./images/nightstand-charcoal.png']}],
+ {name:'Natural',hex:'#bc9164',images:['./images/piece-nook-natural.webp', './images/piece-nook-natural-side.webp', './images/piece-nook-natural-rear.webp']},
+ {name:'Walnut',hex:'#705039',images:['./images/piece-nook-walnut.webp', './images/piece-nook-walnut-side.webp', './images/piece-nook-walnut-rear.webp']},
+ {name:'Charcoal',hex:'#424744',images:['./images/piece-nook-charcoal.webp', './images/piece-nook-charcoal-side.webp', './images/piece-nook-charcoal-rear.webp']}],
  dimensions:{width:500,height:550,depth:400},minDimensions:{width:400,height:450,depth:300},maxDimensions:{width:700,height:750,depth:550},
  customizable:true,customizableParameters:['width','height','depth'],modelUrl:'./models/nook-nightstand.glb',arCompatible:true,
  availability:'Made to order',stock:10,manufacturer:{name:'Atelier Design Studio',country:'India'},
