@@ -6,6 +6,8 @@ const rows:[string,string,number,keyof typeof photos,string,string][]=[['Sora Li
 export const products:Product[]=rows.map(([name,category,price,photo,material,collection],i)=>{const dimensions={width:category==='Sofas'?2100:category==='Beds'?1800:1200,height:category==='Wardrobes'?2000:category==='Tables'?450:800,depth:category==='Beds'?2100:600};const customizable=[0,6,8,11,16,23].includes(i);return {id:`f-${i+1}`,name,category,type:category==='Sofas'?'Seating':category==='Beds'?'Bedroom':category==='Tables'?'Surface':category==='Office Furniture'?'Workspace':'Essentials',description:`A considered piece for everyday living. The ${name} pairs clean lines with tactile ${material.toLowerCase()} and a beautifully balanced silhouette. Crafted in India with carefully selected materials and enduring details.`,price,currency:'INR',images:[image(photo),image(photo,2000),image(photo,1800)],materials:[material],colours:[{name:'Natural',hex:'#c8b79d'},{name:'Walnut',hex:'#72513d'},{name:'Charcoal',hex:'#44443e'}],dimensions,minDimensions:customizable?{width:800,height:400,depth:400}:null,maxDimensions:customizable?{width:2600,height:2400,depth:2200}:null,customizable,customizableParameters:customizable?['width']:[],modelUrl:null,arCompatible:false,availability:i===18?'Out of stock':i%5===0?'Made to order':'In stock',stock:i===18?0:12,manufacturer:{name:'Atelier Design Studio',country:'India'},collection,createdAt:`2026-10-${String(i+1).padStart(2,'0')}`,finish:material==='Walnut'?'Oiled walnut':'Natural matte'};});
 
 const catalogueDesigns: Record<string,string> = {
+  'Forma Lounge Chair':'forma', 'Noma Dining Chair':'noma', 'Terra Accent Chair':'terra',
+  'Ritual Bench':'ritual', 'Balance Office Chair':'balance',
   'Haven Upholstered Bed':'haven', 'Dawn Platform Bed':'dawn', 'Rest King Bed':'rest',
   'Linea Wardrobe':'linea', 'Reed Sideboard':'reed', 'Frame Bookshelf':'frame',
   'Cove Sliding Wardrobe':'cove', 'Milo Media Cabinet':'milo', 'Nest Storage Unit':'nest',
@@ -53,14 +55,6 @@ products.filter(p=>p.category==='Sofas').forEach(p=>{
   p.colours=sofaColours;
   p.images=sofaColours[0].images;
 });
-// Products illustrated with the tufted chair share its upholstery finish previews.
-for (const product of products.filter(piece => piece.images[0] === image('chair'))) {
-  product.colours = product.colours.map(option => {
-    const file = option.name === 'Natural' ? 'chair-natural.jpg' : 'chair-' + option.name.toLowerCase() + '.svg';
-    return {...option, images: ['./images/' + file]};
-  });
-  product.images = product.colours[0].images!;
-}
 export function cardImageSet(src?: string) {
   if (!src?.match(/^\.\/images\/(piece-|studio-desk-|table-room-)/)) return undefined;
   return src.replace('./images/', './images/cards/') + ' 480w, ' + src + ' 1254w';
