@@ -15,6 +15,14 @@ products.filter(p=>p.category==='Sofas').forEach(p=>{
   p.colours=sofaColours;
   p.images=sofaColours[0].images;
 });
+// Products illustrated with the tufted chair share its upholstery finish previews.
+for (const product of products.filter(piece => piece.images[0] === image('chair'))) {
+  product.colours = product.colours.map(option => {
+    const file = option.name === 'Natural' ? 'chair-natural.jpg' : 'chair-' + option.name.toLowerCase() + '.svg';
+    return {...option, images: ['./images/' + file]};
+  });
+  product.images = product.colours[0].images!;
+}
 export function productImages(product:Product,colour:string){
   const variant=product.colours.find(c=>c.name===colour)?.images;
   return product.id==='solace-lounge-chair'&&variant?variant:product.modelUrl&&variant?[variant[0],...product.images.slice(1)]:variant || product.images;
