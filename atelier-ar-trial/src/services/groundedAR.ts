@@ -1,3 +1,5 @@
+import type {Dimensions} from '../types/product';
+import {resizeSectional} from './sectionalSizing.ts';
 import {sectionalTint} from './sectionalFinish.ts';
 import {oakTint} from './oakFinish.ts';
 import {roomPhoto} from './roomPhoto.ts';
@@ -19,6 +21,11 @@ export class GroundedAR {
  private camera=new PerspectiveCamera();
  private floorRoot=new Group();
  private model:Group|null=null;
+ private sectionalSize?:Dimensions;
+ setSectionalSize(size:Dimensions) {
+   this.sectionalSize=size;
+   if(this.model && this.modelUrl.endsWith('/sunday-sectional.glb')) resizeSectional(this.model,size);
+ }
  private reticle=new Mesh(new RingGeometry(.11,.14,48).rotateX(-Math.PI/2),new MeshBasicMaterial({color:'#bce49b',depthTest:false}));
  private session:XRSession|null=null;
  private space:XRReferenceSpace|null=null;
@@ -69,7 +76,7 @@ export class GroundedAR {
    next.position.y-=new Box3().setFromObject(next).min.y;
    next.traverse(object=>{if(object instanceof Mesh){object.castShadow=true;object.receiveShadow=true}});
    if(this.model){this.floorRoot.remove(this.model);disposeTree(this.model)}
-   this.model=next;this.floorRoot.add(next);this.applyFinish();this.update({loading:false,modelError:''});
+   if(this.sectionalSize && url.endsWith('/sunday-sectional.glb'))resizeSectional(next,this.sectionalSize);this.model=next;this.floorRoot.add(next);this.applyFinish();this.update({loading:false,modelError:''});
   }catch{if(!this.closed&&sequence===this.loadSequence){this.floorRoot.visible=false;this.update({loading:false,modelVisible:false,modelError:'The furniture model could not load. Tap Retry model, or exit AR and try again.'})}}
  }
  private applyFinish(){this.model?.traverse(object=>{if(object instanceof Mesh)for(const material of Array.isArray(object.material)?object.material:[object.material])if(material instanceof MeshStandardMaterial&&material.name==='Finish_Wood')material.color.set(material.map ? oakTint(this.finish) : finishColours[this.finish]||finishColours.Natural);else if(material instanceof MeshStandardMaterial&&material.name==='Sectional_Fabric')material.color.set(sectionalTint(this.finish))})}

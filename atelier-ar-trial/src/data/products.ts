@@ -1,3 +1,4 @@
+import {sectionalLimits,sectionalStandard} from '../services/sectionalSizing.ts';
 import type { Product } from '../types/product';
 export const categories=['Sofas','Chairs','Tables','Beds','Wardrobes','Cabinets','Storage','Office Furniture'];
 const photos={sofa:'photo-1555041469-a586c61ea9bc',chair:'photo-1567538096630-e0c55bd6374c',table:'photo-1533090161767-e6ffed986c88',bed:'photo-1505693416388-ac5ce068fe85',room:'photo-1600210492486-724fe5c67fb0',office:'photo-1497366754035-f200968a6e72',storage:'photo-1595428774223-ef52624120d2'};
@@ -28,10 +29,13 @@ for (const product of products) {
 const sectional = products.find(product => product.id === 'f-21');
 if (sectional) {
   sectional.modelUrl = './models/sunday-sectional.glb';
-  sectional.dimensions = {width:2930, depth:1852, height:898};
+  sectional.dimensions = sectionalStandard;
+  sectional.minDimensions = {width:sectionalLimits.width[0],depth:sectionalLimits.depth[0],height:sectionalLimits.height[0]};
+  sectional.maxDimensions = {width:sectionalLimits.width[1],depth:sectionalLimits.depth[1],height:sectionalLimits.height[1]};
+  sectional.customizableParameters = ['width','depth','height'];
   sectional.customizable = true;
   sectional.arCompatible = true;
-  sectional.description = 'An L-shaped sectional with a chaise and loose accent cushions. Place it in your room and try three upholstery finishes. The AR trial uses an estimated width of 2.93 m.';
+  sectional.description = 'An L-shaped sectional with a chaise and loose accent cushions. Start at the 2.93 m trial width, then adjust the seat layout, chaise depth, and leg height in 3D or in your room.';
 }
 
 const writingDesk = products.find(product => product.id === 'f-12');
