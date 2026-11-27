@@ -28,6 +28,7 @@ for (const product of products) {
 
 const sectional = products.find(product => product.id === 'f-21');
 if (sectional) {
+  sectional.colours = sectional.colours.filter(option => option.name !== 'Forest');
   sectional.modelUrl = './models/sunday-sectional.glb';
   sectional.dimensions = sectionalStandard;
   sectional.minDimensions = {width:sectionalLimits.width[0],depth:sectionalLimits.depth[0],height:sectionalLimits.height[0]};
