@@ -2,8 +2,11 @@ import type {Mesh, Object3D} from 'three';
 import type {Dimensions} from '../types/product';
 
 export const sectionalStandard: Dimensions = {width:2930, depth:1852, height:898};
-export const sectionalLimits = {width:[2500,4000], depth:[1852,2000], height:[898,970]} as const;
-export const extraBayAt = 3400;
+export const seatWidthMM = 800;
+export const sectionalLimits = {width:[sectionalStandard.width-seatWidthMM/2, sectionalStandard.width+3*seatWidthMM], depth:[1852,2000], height:[898,970]} as const;
+export function extraSeatBays(width: number) {
+  return Math.max(0, Math.ceil((width-sectionalStandard.width)/seatWidthMM));
+}
 const duplicates = new Set(['4 L.024','Cube.001','4 L.021','4 L.003','4 L.004']);
 
 // The imported meshes have baked coordinates in metres. Keep using those original
@@ -16,13 +19,15 @@ export function resizeSectional(root: Object3D, dimensions: Dimensions) {
     if (mesh.isMesh) (mesh.userData.sectionalCopy ? copies : originals).push(mesh);
   });
   for (const copy of copies) copy.removeFromParent();
-  const extra = dimensions.width >= extraBayAt;
-  const bay = extra ? .815 : 0;
+  const extra = extraSeatBays(dimensions.width);
+  const pitch = seatWidthMM/1000;
   const widthChange = (dimensions.width-sectionalStandard.width)/1000;
   const depthChange = (dimensions.depth-sectionalStandard.depth)/1000;
   const lift = (dimensions.height-sectionalStandard.height)/1000;
-  const interior = 2.93 - .553;
-  const ratio = (interior+widthChange)/(interior+bay);
+  // Only the two straight bays and their inserts absorb fractional steps.
+  const join = -.405;
+  const straightRun = 1.605;
+  const ratio = (straightRun+widthChange)/(straightRun+extra*pitch);
   for (const mesh of originals) {
     const name = mesh.userData.name as string;
     if (!mesh.geometry.boundingBox) mesh.geometry.computeBoundingBox();
@@ -34,19 +39,23 @@ export function resizeSectional(root: Object3D, dimensions: Dimensions) {
     const pillow = ['4 L.001','4 L.010','4 L.018','4 L.019','4 L.020','4 L.021'].includes(name);
     const centerBay = duplicates.has(name);
     const place = (part: Mesh, shift: number) => {
-      part.scale.set(arm || foot || pillow ? 1 : ratio, foot ? 1+lift/bounds.max.y : 1, 1);
-      part.position.set(arm ? Math.sign(cx)*widthChange/2 : (cx+shift)*ratio - cx*part.scale.x, foot ? 0 : lift, 0);
+      const inStraightRun = centerBay || cx > join;
+      const xRatio = inStraightRun && !arm ? ratio : 1;
+      const targetX = arm ? cx + Math.sign(cx)*widthChange/2 :
+        join + (cx + shift - join)*xRatio - widthChange/2;
+      part.scale.set(foot || pillow ? 1 : xRatio, foot ? 1+lift/bounds.max.y : 1, 1);
+      part.position.set(targetX-cx*part.scale.x, foot ? 0 : lift, 0);
       if (name === '4 L.022') {
         part.scale.z = 1 + depthChange/(bounds.max.z-bounds.min.z);
         part.position.z = bounds.min.z*(1-part.scale.z);
       } else if (name === '4 L.015' || cz > .25) part.position.z = depthChange;
     };
-    place(mesh, (centerBay ? -1 : Math.sign(cx))*bay/2);
-    if (extra && centerBay) {
+    place(mesh, !centerBay && cx > 0 ? extra*pitch : 0);
+    for (let i=1; centerBay && i<=extra; i++) {
       const copy = mesh.clone();
       copy.userData.sectionalCopy = true;
       mesh.parent!.add(copy);
-      place(copy,bay/2);
+      place(copy,i*pitch);
     }
   }
   root.updateMatrixWorld(true);
