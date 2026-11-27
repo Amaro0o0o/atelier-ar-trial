@@ -1,3 +1,4 @@
+import {sectionalTint} from './sectionalFinish.ts';
 import {oakTint} from './oakFinish.ts';
 import {roomPhoto} from './roomPhoto.ts';
 import {Box3,DirectionalLight,Group,HemisphereLight,Mesh,MeshBasicMaterial,MeshStandardMaterial,PerspectiveCamera,PlaneGeometry,RingGeometry,Scene,ShadowMaterial,Texture,WebGLRenderer} from 'three';
@@ -71,7 +72,7 @@ export class GroundedAR {
    this.model=next;this.floorRoot.add(next);this.applyFinish();this.update({loading:false,modelError:''});
   }catch{if(!this.closed&&sequence===this.loadSequence){this.floorRoot.visible=false;this.update({loading:false,modelVisible:false,modelError:'The furniture model could not load. Tap Retry model, or exit AR and try again.'})}}
  }
- private applyFinish(){this.model?.traverse(object=>{if(object instanceof Mesh)for(const material of Array.isArray(object.material)?object.material:[object.material])if(material instanceof MeshStandardMaterial&&material.name==='Finish_Wood')material.color.set(material.map ? oakTint(this.finish) : finishColours[this.finish]||finishColours.Natural)})}
+ private applyFinish(){this.model?.traverse(object=>{if(object instanceof Mesh)for(const material of Array.isArray(object.material)?object.material:[object.material])if(material instanceof MeshStandardMaterial&&material.name==='Finish_Wood')material.color.set(material.map ? oakTint(this.finish) : finishColours[this.finish]||finishColours.Natural);else if(material instanceof MeshStandardMaterial&&material.name==='Sectional_Fabric')material.color.set(sectionalTint(this.finish))})}
  place(){
   if(!this.state.stable||this.state.loading||this.state.modelError||!this.state.tracking||!this.model)return;
   // Commit the exact point shown when the button is tapped. A later camera

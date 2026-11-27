@@ -6,7 +6,7 @@ const rows:[string,string,number,keyof typeof photos,string,string][]=[['Sora Li
 export const products:Product[]=Array.from(rows.entries()).filter(([, row]) => row[0] !== 'Balance Office Chair').map(([i,[name,category,price,photo,material,collection]])=>{const dimensions={width:category==='Sofas'?2100:category==='Beds'?1800:1200,height:category==='Wardrobes'?2000:category==='Tables'?450:800,depth:category==='Beds'?2100:600};return {id:`f-${i+1}`,name,category,type:category==='Sofas'?'Seating':category==='Beds'?'Bedroom':category==='Tables'?'Surface':category==='Office Furniture'?'Workspace':'Essentials',description:`A considered piece for everyday living. The ${name} pairs clean lines with tactile ${material.toLowerCase()} and a beautifully balanced silhouette. Crafted in India with carefully selected materials and enduring details.`,price,currency:'INR',images:[image(photo),image(photo,2000),image(photo,1800)],materials:[material],colours:[{name:'Natural',hex:'#c8b79d'},{name:'Walnut',hex:'#72513d'},{name:'Charcoal',hex:'#44443e'}],dimensions,minDimensions:null,maxDimensions:null,customizable:false,customizableParameters:[],modelUrl:null,arCompatible:false,availability:i===18?'Out of stock':i%5===0?'Made to order':'In stock',stock:i===18?0:12,manufacturer:{name:'Atelier Design Studio',country:'India'},collection,createdAt:`2026-10-${String(i+1).padStart(2,'0')}`,finish:material==='Walnut'?'Oiled walnut':'Natural matte'};});
 
 const catalogueDesigns: Record<string,string> = {
-  'Sora Linen Sofa':'sora', 'Oslo Modular Sofa':'oslo', 'Cloud Two-Seater':'cloud', 'Sunday Corner Sofa':'sunday',
+  'Sora Linen Sofa':'sora', 'Oslo Modular Sofa':'oslo', 'Cloud Two-Seater':'cloud', 'Sunday Corner Sofa':'sectional',
   'Forma Lounge Chair':'forma', 'Noma Dining Chair':'noma', 'Terra Accent Chair':'terra',
   'Ritual Bench':'ritual',
   'Haven Upholstered Bed':'haven', 'Dawn Platform Bed':'dawn', 'Rest King Bed':'rest',
@@ -23,6 +23,15 @@ for (const product of products) {
     ...option, images: ['./images/piece-' + design + '-' + option.name.toLowerCase() + '.webp?v=2'],
   }));
   product.images = [product.colours[0].images![0]];
+}
+
+const sectional = products.find(product => product.id === 'f-21');
+if (sectional) {
+  sectional.modelUrl = './models/sunday-sectional.glb';
+  sectional.dimensions = {width:2930, depth:1852, height:898};
+  sectional.customizable = true;
+  sectional.arCompatible = true;
+  sectional.description = 'An L-shaped sectional with a chaise and loose accent cushions. Place it in your room and try three upholstery finishes. The AR trial uses an estimated width of 2.93 m.';
 }
 
 const writingDesk = products.find(product => product.id === 'f-12');
