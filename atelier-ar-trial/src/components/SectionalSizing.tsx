@@ -1,29 +1,28 @@
-import type {Dimensions} from '../types/product';
-import {extraSeatBays,seatWidthMM,sectionalLimits,sectionalStandard} from '../services/sectionalSizing';
+import type {SectionalLayout} from '../services/sectionalSizing';
+import {chaiseModuleMM,seatWidthMM,sectionalLimits,sectionalStandard} from '../services/sectionalSizing';
+import './sectional-sizing.css';
 
-export default function SectionalSizing({dimensions,onChange}:{dimensions:Dimensions;onChange:(d:Dimensions)=>void}) {
-  const changeWidth = (seats:number) => onChange({...dimensions,width:dimensions.width+seats*seatWidthMM});
-  return <section className="sizing-controls" aria-label="Sectional size">
-    <h3>Size the sectional</h3>
-    <p>{dimensions.width} W × {dimensions.depth} D × {dimensions.height} H mm · {3+extraSeatBays(dimensions.width)} seat bays</p>
-    <div className="axis-scale"><strong>X · Sofa width</strong>
-      <div className="scale-presets">
-        <button type="button" disabled={dimensions.width-seatWidthMM/2<sectionalLimits.width[0]} onClick={()=>changeWidth(-0.5)}>−0.5 seat width</button>
-        <button type="button" disabled={dimensions.width+seatWidthMM>sectionalLimits.width[1]} onClick={()=>changeWidth(1)}>+1 seat width</button>
-      </div>
-      <small>1 seat width = {seatWidthMM} mm · Overall width {sectionalLimits.width[0]}–{sectionalLimits.width[1]} mm</small>
+export default function SectionalSizing({dimensions,onChange}:{dimensions:SectionalLayout;onChange:(d:SectionalLayout)=>void}) {
+  const side = dimensions.chaiseSide ?? 'left';
+  return <section className="sectional-sizing" aria-label="Sectional layout">
+    <header><h3>Sectional layout</h3><button type="button" className="layout-reset" onClick={()=>onChange({...sectionalStandard})}>Reset</button></header>
+    <div className="chaise-options" role="group" aria-label="Chaise side when facing the sofa">
+      {(['left','right'] as const).map(value=><button key={value} type="button" aria-pressed={side===value} onClick={()=>onChange({...dimensions,chaiseSide:value})}>
+        <span aria-hidden="true" className={'layout-icon '+value}/>{value==='left'?'Left chaise':'Right chaise'}
+      </button>)}
     </div>
-    {(['depth','height'] as const).map(axis=>{
-      const [min,max]=sectionalLimits[axis];
-      const leg=axis==='height';
-      const label=leg?'Leg height':'Chaise depth';
-      const offset=leg?841:0;
-      return <label className="axis-scale" key={axis}>{label} · {dimensions[axis]-offset} mm
-        <input type="range" aria-label={label} min={min-offset} max={max-offset} value={dimensions[axis]-offset}
-          onChange={e=>onChange({...dimensions,[axis]:Number(e.target.value)+offset})}/>
-      </label>;
+    <p className="layout-hint">Left and right as you face the sofa.</p>
+    {(['width','depth'] as const).map(axis=>{
+      const width=axis==='width', unit=width?seatWidthMM:chaiseModuleMM;
+      const minus=width?0.5:1;
+      const adjust=(steps:number)=>onChange({...dimensions,[axis]:dimensions[axis]+steps*unit});
+      return <div className="layout-row" key={axis}><div><strong>{width?'X · Sofa width':'Y · Chaise depth'}</strong><small>1 module · {unit} mm</small></div>
+        <div className="layout-stepper"><button type="button" aria-label={'Reduce '+axis+' by '+minus+' module'} disabled={dimensions[axis]-minus*unit<sectionalLimits[axis][0]} onClick={()=>adjust(-minus)}>−{minus}</button>
+        <output>{dimensions[axis]} mm</output><button type="button" aria-label={'Increase '+axis+' by one module'} disabled={dimensions[axis]+unit>sectionalLimits[axis][1]} onClick={()=>adjust(1)}>+1</button></div>
+      </div>;
     })}
-    <p className="small muted">Each added module uses the original seat, back, pillow, and two support feet. Half-width adjustments shorten the straight section.</p>
-    <button type="button" className="text-link" onClick={()=>onChange({...sectionalStandard})}>Reset to standard size</button>
+    <label className="layout-height"><span>Z · Leg height <b>{dimensions.height-841} mm</b></span>
+      <input type="range" aria-label="Leg height" min={sectionalLimits.height[0]-841} max={sectionalLimits.height[1]-841} value={dimensions.height-841} onChange={e=>onChange({...dimensions,height:Number(e.target.value)+841})}/>
+    </label>
   </section>;
 }
